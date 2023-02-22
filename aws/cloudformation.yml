@@ -1,0 +1,145 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  Environment:
+    Type: String
+    Description: environment
+    Default: dev
+  LambdaExecutionRoleManagedPolicyName:
+    Type: String
+    Description: Name of managed policy for the lambda execution role
+    Default: golfnow-groupme-bot-lambda-role-policy
+  LambdaFunctionName:
+    Type: String
+    Description: Name of lambda for golfme groupme bot
+    Default: golfnow-groupme-bot-lambda
+  GroupmeBotName:
+    Type: String
+    Description: The base path to the lambdas parameters
+    Default: dev
+  LambdaContainerRepositoryName:
+    Type: String
+    Description: ECR Repository Name for the lambda function
+    Default: golfnow-groupme-bot-repository
+  LambdaContainerName:
+    Type: String
+    Description: ECR Container Name for the lambda function
+    Default: golfnow-groupme-bot-container
+  LambdaContainerVersion:
+    Type: String
+    Description: ECR Container version for the lambda function
+    Default: "0.0.1"
+
+Resources:
+#   LambdaExecutionRoleManagedPolicy:
+#     Type: AWS::IAM::ManagedPolicy
+#     Properties:
+#       ManagedPolicyName: !Ref LambdaExecutionRoleManagedPolicyName
+#       PolicyDocument:
+#         Version: "2012-10-17"
+#         Statement:
+#           - Effect: Allow
+#             Action: 
+#               - lambda:InvokeFunction
+#             Resource:
+#               - !Ref LambdaFunctionName
+#         Statement: 
+#           - Effect: Allow
+#             Action:
+#               - ssm:GetParameter
+#               - ssm:GetParameters
+#               - ssm:GetParametersByPath
+#             Resource:
+#               - !Sub "/${GroupmeBotName}/*"
+#         Statement:
+#           - Effect: Allow
+#             Action: 
+#               - kms:Decrypt
+#             Resource:
+#               - "*"
+
+  # LambdaExecutionRole:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Version: '2012-10-17'
+  #       Statement:
+  #       - Effect: Allow
+  #         Principal:
+  #           Service:
+  #             - lambda.amazonaws.com
+  #           AWS:
+  #             - !Sub arn:aws:iam::${AWS::AccountId}:root
+  #             - !Sub arn:aws:iam::${AWS::AccountId}:devops
+  #         Action:
+  #           - sts:AssumeRole
+  #     RoleName: !Ref LambdaFunctionName
+  #     Path: "/"
+  #     ManagedPolicyArn:
+  #       - "arn:aws:iam::policy/service-role/AWSLambdaBasicExecutionRole"
+  #       - !Ref LambdaExecutionRoleManagedPolicyName
+
+  # LambdaFunction:
+  #   Type: AWS::Lambda::Function
+  #   Properties:
+  #     Role: !Sub LambdaExecutionRole
+  #     FunctionName: !Ref LambdaFunctionName
+  #     Code: 
+  #       ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.us-east-1.amazonaws.com/${LambdaContainerRepositoryName}:${LambdaContainerContainerName}"
+  #     Description: lambda function
+  #     ImageConfig:
+  #       EntryPoint:
+  #         - /var/lang/bin/python
+  #         - "-m"
+  #         - awslambdaric
+  #       Command:
+  #         - app.handler
+  #     Environment:
+  #       Variables:
+  #         ENV: dev
+  #         GROUPME_BOT_NAME: !Ref GroupmeBotName
+  
+  Courses:
+    Type: AWS::SSM::Parameter
+    Properties: 
+      DataType: text
+      Description: Golf courses to send tee times for (format - [course name,course url])
+      Name: !Sub "/${GroupmeBotName}/courses"
+      Tier: Standard
+      Type: StringList
+      Value: Cherokee Run Golf Club,https://www.golfnow.com/tee-times/facility/3744-cherokee-run-golf-club/search,West Pines Golf Club,https://www.golfnow.com/tee-times/facility/2329-west-pines-golf-club/search,Country Club of Gwinnett,https://www.golfnow.com/tee-times/facility/3746-country-club-of-gwinnett/search
+  MinTime:
+    Type: AWS::SSM::Parameter
+    Properties: 
+      DataType: text
+      Description: min start time
+      Name: !Sub "/${GroupmeBotName}/min_time"
+      Tier: Standard
+      Type: String
+      Value: 7:00AM
+  MaxTime:
+    Type: AWS::SSM::Parameter
+    Properties: 
+      DataType: text
+      Description: max start time
+      Name: !Sub "/${GroupmeBotName}/max_time"
+      Tier: Standard
+      Type: String
+      Value: 5:00PM
+  Holes:
+    Type: AWS::SSM::Parameter
+    Properties: 
+      DataType: text
+      Description: number of holes (18 or 9)
+      Name: !Sub "/${GroupmeBotName}/holes"
+      Tier: Standard
+      Type: String
+      Value: '18'
+  Days:
+    Type: AWS::SSM::Parameter
+    Properties: 
+      DataType: text
+      Description: number of holes (List of days of week)
+      Name: !Sub "/${GroupmeBotName}/days"
+      Tier: Standard
+      Type: StringList
+      Value: SATURDAY,SUNDAY
